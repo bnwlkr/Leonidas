@@ -1,4 +1,6 @@
 .DS_Store
-*.swp
 venv
-.env
+__pycache__
+*.db
+*.swp
+*.env
