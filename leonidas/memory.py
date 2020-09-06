@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 users = {}
 
-class User():
+class User:
     def __init__(self, id, name, verified=False, code=None, email=None):
         self.id = id
         self.name = name

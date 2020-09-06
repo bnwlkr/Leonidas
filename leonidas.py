@@ -23,7 +23,7 @@ EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
 
 logging.basicConfig(level=logging.INFO)
 
-EMAIL_REGEX = r"\b[\w.%+-]+@alumni\.ubc\.ca\b"
+EMAIL_REGEX = r"\b[\w.%+-]+@\w+\.ubc\.ca\b"
 
 leonidas = commands.Bot('!')
 

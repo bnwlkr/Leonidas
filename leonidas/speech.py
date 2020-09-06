@@ -2,7 +2,7 @@ GREETING = ("Greetings %s, I am Leonidas. "
             "I'm here to make sure you don't go to SFU.")
 
 EMAIL_REQUEST = ("Please tell me your UBC email address. "
-                 "It should end with '@alumni.ubc.ca'.")
+                 "It should end with 'ubc.ca'.")
 
 BAD_EMAIL = ("Hmm, I couldn't see a UBC email address in your message. "
              "Please try again.")

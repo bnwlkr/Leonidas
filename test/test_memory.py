@@ -1,7 +1,6 @@
 import os
 import sqlite3
 import unittest
-from unittest import mock
 import logging
 import copy
 
