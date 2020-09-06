@@ -1,31 +1,29 @@
 import os
 import re
+import logging
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-
-from leonidas import memory, utils
-
 load_dotenv()
+
+from leonidas import memory, speech, email, utils
+
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
+EMAIL_ACCOUNT = os.getenv('EMAIL_ACCOUNT')
+EMAIL_PASSWD = os.getenv('EMAIL_PASSWD')
+EMAIL_SERVER_ADDR = os.getenv('EMAIL_SERVER_ADDR')
+EMAIL_SERVER_PORT = os.getenv('EMAIL_SERVER_PORT')
 
+assert TOKEN and GUILD and EMAIL_ACCOUNT and \
+       EMAIL_PASSWD and EMAIL_SERVER_ADDR and EMAIL_SERVER_PORT
+
+EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
+
+logging.basicConfig(level=logging.INFO)
 
 EMAIL_REGEX = r"\b[\w.%+-]+@alumni\.ubc\.ca\b"
-
-GREETING = ("Greetings %s, I am Leonidas. "
-            "I'm here to make sure you don't go to SFU.")
-
-EMAIL_REQUEST = ("Please tell me your UBC email address."
-                 "It should end with @alumni.ubc.ca")
-
-BAD_EMAIL = ("Hmm, I couldn't see a UBC email address in your message. "
-             "Please try again.")
-
-SENT_EMAIL = ("Thanks! I sent an email with an access code to %s."
-              "Respond to me here with the code once you receive it.")
-
 
 leonidas = commands.Bot('!')
 
@@ -34,36 +32,49 @@ async def on_ready():
     guild = discord.utils.get(leonidas.guilds, name=GUILD)
     if guild is None:
         raise LookupError(f"Guild '{GUILD}' not found")
-    print(f"{leonidas.user} connected to {guild.name}")
+    logging.info(f"{leonidas.user} connected to {guild.name}")
 
 
 @leonidas.event
 async def on_member_join(member):
-    memory.user_stage = memory.Stage.EMAIL
+    memory.users[member.id] = memory.User(member, memory.Stage.EMAIL, None)
     await member.create_dm()
-    await member.dm_channel.send(GREETING % member.name)
-    await member.dm_channel.send(EMAIL_REQUEST)
+    await member.dm_channel.send(speech.GREETING % member.name)
+    await member.dm_channel.send(speech.EMAIL_REQUEST)
 
 @leonidas.event
 async def on_message(msg):
     if msg.author == leonidas.user:
         return
     if isinstance(msg.channel, discord.DMChannel):  # process DM
-        print(f"{msg.author}: {msg.content}")
-        if memory.user_stage == memory.Stage.EMAIL:
-            email_search = re.search(EMAIL_REGEX, msg.content)
-            if email_search is None:
-                await msg.author.send(BAD_EMAIL_RESP)
-            else:
-                email = email_search.group()
-                print(f"parsed email: {email}")
-                access_code = utils.generate_code()
-                memory.user_email[msg.author] = email
-                memory.user_stage[msg.author] = memory.Stage.CODE
-                memory.user_code[msg.author] = access_code
-                await msg.author.send(SENT_EMAIL % email)
-
-    await leonidas.process_commands(msg)
+        user = memory.users.get(msg.author.id)
+        if user is None:
+            logging.info(f"{msg.author}: {msg.content} (UNKNOWN)")
+            return
+        logging.info(f"{user}: {msg.content}")
+        if user.verified:
+            await msg.author.send(speech.ALREADY_VERIFIED)
+            return
+        email_search = re.search(EMAIL_REGEX, msg.content)
+        if user.code is not None and user.code in msg.content:
+            await msg.author.send(speech.VERIFIED)
+            user.verified = True
+            logging.info(f"{user} verified")
+        elif user.code is not None and email_search is None:
+            await msg.author.send(speech.BAD_CODE)
+        elif user.code is None and email_search is None:
+            await msg.author.send(speech.BAD_EMAIL)
+        elif email_search is not None:
+            email_addr = email_search.group()
+            code = utils.generate_code()
+            email_cfg = email.EmailConfig(EMAIL_ACCOUNT, EMAIL_PASSWD,
+                                          EMAIL_SERVER_ADDR, EMAIL_SERVER_PORT)
+            email.send_code(email_cfg, email_addr, code)
+            user.code = code
+            user.email = email
+            await msg.author.send(speech.SENT_EMAIL % email_addr)
+    else:
+        await leonidas.process_commands(msg)
 
 # example of a command
 @leonidas.command()
