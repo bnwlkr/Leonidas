@@ -37,7 +37,7 @@ async def on_ready():
 
 @leonidas.event
 async def on_member_join(member):
-    memory.users[member.id] = memory.User(member, memory.Stage.EMAIL, None)
+    memory.users[member.id] = memory.User(member.id, member.name)
     await member.create_dm()
     await member.dm_channel.send(speech.GREETING % member.name)
     await member.dm_channel.send(speech.EMAIL_REQUEST)
@@ -71,7 +71,7 @@ async def on_message(msg):
                                           EMAIL_SERVER_ADDR, EMAIL_SERVER_PORT)
             email.send_code(email_cfg, email_addr, code)
             user.code = code
-            user.email = email
+            user.email = email_addr
             await msg.author.send(speech.SENT_EMAIL % email_addr)
     else:
         await leonidas.process_commands(msg)
