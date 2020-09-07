@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from leonidas import memory, speech, email, utils
+from leonidas.course import Course
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
@@ -24,7 +25,6 @@ EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
 logging.basicConfig(level=logging.INFO)
 
 leonidas = commands.Bot('!')
-
 
 async def handle_course_request(user, course):
     await user.send(speech.ADDED_TO_CHANNEL % course)
@@ -55,12 +55,15 @@ async def on_message(msg):
             return
         logging.info(f"{user}: {msg.content}")
         if user.verified:
-            course_search = utils.find_courses(msg.content) 
-            if not course_search:
+            found_course = False
+            async for match in utils.find_courses(msg.content):
+                if isinstance(match, Course):
+                    found_course = True
+                    await handle_course_request(msg.author, match)
+                else:
+                    await msg.author.send(speech.BAD_COURSE % match)
+            if not found_course:
                 await msg.author.send(speech.NO_COURSES)
-            else:
-                for course in course_search:
-                    await handle_course_request(msg.author, course)
             return
         email_addr = utils.find_email(msg.content)
         if user.code is not None and user.code in msg.content:

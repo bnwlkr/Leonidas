@@ -14,6 +14,8 @@ SENT_EMAIL = ("Thanks! I sent an email with an access code to %s. "
 
 BAD_CODE = ("Hmm, I can't see the right access code in your message.")
 
+BAD_COURSE = ("I don't think '%s' is a valid UBC class this session")
+
 NO_COURSES = ("Hmm, I can't see any valid UBC courses in your message.")
 
 ADDED_TO_CHANNEL = ("I added you to the %s channel!")
