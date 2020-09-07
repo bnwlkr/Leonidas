@@ -23,9 +23,11 @@ EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
 
 logging.basicConfig(level=logging.INFO)
 
-EMAIL_REGEX = r"\b[\w.%+-]+@\w+\.ubc\.ca\b"
-
 leonidas = commands.Bot('!')
+
+
+async def handle_course_request(user, course):
+    await user.send(speech.ADDED_TO_CHANNEL % course)
 
 @leonidas.event
 async def on_ready():
@@ -53,19 +55,27 @@ async def on_message(msg):
             return
         logging.info(f"{user}: {msg.content}")
         if user.verified:
-            await msg.author.send(speech.ALREADY_VERIFIED)
+            course_search = utils.find_courses(msg.content) 
+            if not course_search:
+                await msg.author.send(speech.NO_COURSES)
+            else:
+                for course in course_search:
+                    await handle_course_request(msg.author, course)
             return
-        email_search = re.search(EMAIL_REGEX, msg.content)
+        email_addr = utils.find_email(msg.content)
         if user.code is not None and user.code in msg.content:
             await msg.author.send(speech.VERIFIED)
             user.verified = True
             logging.info(f"{user} verified")
-        elif user.code is not None and email_search is None:
+        elif user.code is not None and email_addr is None:
             await msg.author.send(speech.BAD_CODE)
-        elif user.code is None and email_search is None:
+        elif user.code is None and email_addr is None:
             await msg.author.send(speech.BAD_EMAIL)
-        elif email_search is not None:
-            email_addr = email_search.group()
+        elif email_addr:
+            if memory.email_already_verified(email_addr):
+                await msg.author.send(speech.EMAIL_ALREADY_USED)
+                logging.info(f"{user}: {email_addr} already used")
+                return
             code = utils.generate_code()
             email_cfg = email.EmailConfig(EMAIL_ACCOUNT, EMAIL_PASSWD,
                                           EMAIL_SERVER_ADDR, EMAIL_SERVER_PORT)

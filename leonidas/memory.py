@@ -77,3 +77,6 @@ def _create_db(db_cursor):
         """
     )
     logging.info("created memory database")
+
+def email_already_verified(email):
+    return any(u.verified and u.email == email for u in users.values())
