@@ -11,7 +11,7 @@ class TestMemory(unittest.TestCase):
 
     def run(self, result=None):
         logging.basicConfig(level=logging.DEBUG)
-        db_path = 'memory.db'
+        db_path = 'test/data/memory.db'
         if os.path.exists(db_path):
             os.remove(db_path)
         with sqlite3.connect(db_path) as db_conn:
