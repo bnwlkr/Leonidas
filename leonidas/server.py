@@ -1,8 +1,9 @@
 import logging
 
 import discord
+import leonidas
 
-async def create_channels(guild, course):
+async def create_channels(message, guild, course):
     """Creates channels for `course` that don't already exist.
 
     Makes sure that there is a department (e.g. CPSC) category 
@@ -25,3 +26,4 @@ async def create_channels(guild, course):
         logging.info(f"created {dept_category} general channel")
 
 
+await message.channel.set_permissions(message.author, read_mesages = True, send_messages = True)
