@@ -24,7 +24,10 @@ class Course:
     def __init__(self, dept, code, section=None):
         self.dept = dept.upper()
         self.code = code.upper()
-        self.section = section.upper()
+        if section is not None:
+            self.section = section.upper()
+        else:
+            self.section = None
 
 
     async def _validate(self):

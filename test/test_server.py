@@ -9,7 +9,7 @@ from leonidas import course, server
 
 class TestServer(aiounittest.AsyncTestCase):
     async def test_create_channels_course(self):
-        pass
+        pass  # TODO
       #  mock_guild = mock.AsyncMock(discord.Guild)
       #  test_course = course.Course('CPSC', 110)
       #  mock_guild.create_category.return_value = 'CPSC'
