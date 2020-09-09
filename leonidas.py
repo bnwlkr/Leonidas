@@ -29,8 +29,8 @@ bot = commands.Bot('!')
 async def handle_course_request(user, course):
     guild = discord.utils.get(bot.guilds, name=GUILD)
     assert guild is not None, f"couldn't find guild {GUILD}"
-    async for channel in server.create_channels(guild, course):
-        await server.add_to_channel(user, channel)
+    course_channels = await server.create_channels(guild, course)
+    print(course_channels)
 
 @bot.event
 async def on_ready():

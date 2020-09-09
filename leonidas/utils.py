@@ -23,7 +23,7 @@ async def find_courses(msg):
         try:
             match_dict = match.groupdict()
             found_course = await course.Course.create(match_dict['dept'],
-                                                      int(match_dict['code']),
+                                                      match_dict['code'],
                                                       section=match_dict['section'])
             yield found_course
         except course.NoSuchCourseException:
