@@ -27,10 +27,32 @@ bot = commands.Bot('!')
 
 
 async def handle_course_request(user, course):
+    logging.info(f"course request for {course}")
     guild = discord.utils.get(bot.guilds, name=GUILD)
     assert guild is not None, f"couldn't find guild {GUILD}"
+    member = guild.get_member(user.id)
     course_channels = await server.create_channels(guild, course)
-    print(course_channels)
+    added_to_channel = False
+    if not (await server.in_channel(member, course_channels.dept_general)):
+        await server.add_to_channel(member, course_channels.dept_general)
+        added_to_channel = True
+        await member.dm_channel.send(speech.ADDED_TO_CHANNEL %
+                                     f"{course.dept} general".lower())
+    if not (await server.in_channel(member, course_channels.course_channel)):
+        await server.add_to_channel(member, course_channels.course_channel)
+        added_to_channel = True
+        await member.dm_channel.send(speech.ADDED_TO_CHANNEL %
+                                     f"{course.dept}-{course.code}".lower())
+    if course_channels.section_channel is not None:
+        if not (await server.in_channel(member, course_channels.section_channel)):
+            await server.add_to_channel(member, course_channels.section_channel)
+            added_to_channel = True
+            await member.dm_channel.send(speech.ADDED_TO_CHANNEL %
+                                         f"{course.dept}-{course.code}-"
+                                         f"{course.section}".lower())
+    if not added_to_channel:
+        await member.dm_channel.send(speech.ALREADY_IN_CHANNELS % course)
+
 
 @bot.event
 async def on_ready():

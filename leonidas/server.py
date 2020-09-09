@@ -3,7 +3,6 @@ import logging
 import discord
 import leonidas
 
-async def create_channels(message, guild, course):
 class CourseChannels:
     def __init__(self, dept_general, course_channel, section_channel=None):
         self.dept_general = dept_general
@@ -21,7 +20,6 @@ async def create_channels(guild, course):
         guild: the guild (server) to create the channels in
         course: the `leonidas.course.Course` to create channels for
     """
-    logging.info(f"creating channels for {course}")
     secret = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False)
     }
@@ -43,13 +41,25 @@ async def create_channels(guild, course):
     section_channel = None
     if course.section is not None:
         section_channel_name = f"{course.dept}-{course.code}-{course.section}".lower()
-        section_channel = discord.utils.get(dept_category.channels, name=section_channel_name)
+        section_channel = discord.utils.get(dept_category.channels,
+                                            name=section_channel_name)
         if section_channel is None:
             section_channel = await dept_category.create_text_channel(section_channel_name,
                                                                       overwrites=secret)
             logging.info(f"created section channel {section_channel}")
 
-    await message.channel.set_permissions(message.author, read_messages=True, send_messages=True) 
-    return CourseChannels(dept_general, course_channel, section_channel=section_channel)
+    return CourseChannels(dept_general,
+                          course_channel,
+                          section_channel=section_channel)
 
+
+
+async def in_channel(user, channel):
+    user_perms = channel.permissions_for(user)
+    return user_perms.read_messages and user_perms.send_messages
+        
+
+async def add_to_channel(user, channel):
+    logging.info(f"adding {user} to {channel}")
+    await channel.set_permissions(user, read_messages=True, send_messages=True)
 

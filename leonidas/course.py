@@ -22,9 +22,9 @@ class Course:
 
 
     def __init__(self, dept, code, section=None):
-        self.dept = dept
-        self.code = code
-        self.section = section
+        self.dept = dept.upper()
+        self.code = code.upper()
+        self.section = section.upper()
 
 
     async def _validate(self):

@@ -21,7 +21,7 @@ class User:
     def __hash__(self):
         return self.id
 
-    def __str__(self):
+    def __repr__(self):
         return (f"{self.name} {self.verified} "
                 f"{self.code} {self.email}")
 
@@ -38,19 +38,19 @@ def boot(db_path):
 
 def _read(db_cursor):
     logging.info("read memory")
-    db_users = db_cursor.execute("SELECT id, name, verified, email "
-                                  "FROM users").fetchall()
-    for db_user in db_users:
-        id = db_user[0]
-        users[id] = User(id, db_user[1], bool(db_user[2]), db_user[3])
-
-def _write(db_cursor):
-    logging.info("write memory")
     try:
         _create_db(db_cursor)
     except sqlite3.OperationalError:
         pass
 
+    db_users = db_cursor.execute("SELECT id, name, verified, code, email "
+                                  "FROM users").fetchall()
+    for db_user in db_users:
+        id = db_user[0]
+        users[id] = User(id, db_user[1], bool(db_user[2]), db_user[3], db_user[4])
+
+def _write(db_cursor):
+    logging.info("write memory")
     for user in users.values():
         db_cursor.execute("UPDATE users "
                           "SET name = ?, verified = ?, code = ?, email = ? "
@@ -62,7 +62,6 @@ def _write(db_cursor):
                               "VALUES (?, ?, ?, ?, ?)", 
                               [user.id, user.name, user.verified,
                                user.code, user.email])
-
 
 def _create_db(db_cursor):
     db_cursor.execute(
