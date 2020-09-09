@@ -1,5 +1,5 @@
 GREETING = ("Greetings %s, I am Leonidas. "
-            "I'm here to make sure you don't go to SFU.")
+            "I'm here to make sure you're not from SFU.")
 
 EMAIL_REQUEST = ("Please tell me your UBC email address. "
                  "It should end with 'ubc.ca'.")

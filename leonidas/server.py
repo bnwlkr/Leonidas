@@ -1,7 +1,9 @@
 import logging
 
 import discord
+import leonidas
 
+async def create_channels(message, guild, course):
 class CourseChannels:
     def __init__(self, dept_general, course_channel, section_channel=None):
         self.dept_general = dept_general
@@ -46,5 +48,8 @@ async def create_channels(guild, course):
             section_channel = await dept_category.create_text_channel(section_channel_name,
                                                                       overwrites=secret)
             logging.info(f"created section channel {section_channel}")
+
+    await message.channel.set_permissions(message.author, read_messages=True, send_messages=True) 
     return CourseChannels(dept_general, course_channel, section_channel=section_channel)
+
 
