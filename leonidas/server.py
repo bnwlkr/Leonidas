@@ -28,7 +28,7 @@ async def create_channels(guild, course):
         dept_category = await guild.create_category(course.dept,
                                                     overwrites=secret)
         logging.info(f"created department category {dept_category}")
-    dept_general = discord.utils.get(guild.categories, name='general')
+    dept_general = discord.utils.get(dept_category.channels, name='general')
     if dept_general is None:
         dept_general = await dept_category.create_text_channel('general')
         logging.info(f"created {dept_category} general channel")
