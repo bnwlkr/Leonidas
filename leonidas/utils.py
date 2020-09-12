@@ -28,7 +28,7 @@ async def find_courses(msg):
             yield found_course
         except course.NoSuchCourseException:
             logging.info(f"invalid course: {match_dict['dept']} "
-                          "{match_dict['code']}")
+                         f"{match_dict['code']}")
             no_match_resp = f"{match_dict['dept']} {match_dict['code']}"
             if match_dict['section'] is not None:
                 no_match_resp = f"{no_match_resp} {match_dict['section']}"

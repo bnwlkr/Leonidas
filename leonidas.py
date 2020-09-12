@@ -26,40 +26,31 @@ logging.basicConfig(level=logging.INFO)
 bot = commands.Bot('!')
 
 
-async def handle_course_request(user, course):
-    logging.info(f"course request for {course}")
-    guild = discord.utils.get(bot.guilds, name=GUILD)
-    assert guild is not None, f"couldn't find guild {GUILD}"
-    member = guild.get_member(user.id)
-    course_channels = await server.create_channels(guild, course)
-    added_to_channel = False
-    if not (await server.in_channel(member, course_channels.dept_general)):
-        await server.add_to_channel(member, course_channels.dept_general)
-        added_to_channel = True
-        await member.dm_channel.send(speech.ADDED_TO_CHANNEL %
-                                     f"{course.dept} general".lower())
-    if not (await server.in_channel(member, course_channels.course_channel)):
-        await server.add_to_channel(member, course_channels.course_channel)
-        added_to_channel = True
-        await member.dm_channel.send(speech.ADDED_TO_CHANNEL %
-                                     f"{course.dept}-{course.code}".lower())
-    if course_channels.section_channel is not None:
-        if not (await server.in_channel(member, course_channels.section_channel)):
-            await server.add_to_channel(member, course_channels.section_channel)
-            added_to_channel = True
-            await member.dm_channel.send(speech.ADDED_TO_CHANNEL %
-                                         f"{course.dept}-{course.code}-"
-                                         f"{course.section}".lower())
-    if not added_to_channel:
-        await member.dm_channel.send(speech.ALREADY_IN_CHANNELS % course)
-
-
 @bot.event
 async def on_ready():
+    global guild
+    global general_channel
+    global airlock_channel
     guild = discord.utils.get(bot.guilds, name=GUILD)
     assert guild is not None, f"couldn't find guild {GUILD}"
+    general_channel = discord.utils.get(guild.channels, name='ubc-general')
+    assert general_channel is not None, "couldn't find ubc-general channel"
+    airlock_channel = discord.utils.get(guild.channels, name='airlock')
+    assert general_channel is not None, "couldn't find airlock channel"
     logging.info(f"{bot.user} connected to {guild.name}")
 
+async def handle_course_request(user, course):
+    logging.info(f"course request for {course}")
+    member = guild.get_member(user.id)
+    added_to_channel = False
+    async for channel in server.create_channels(guild, course):
+        if not (await server.in_channel(member, channel)):
+            await server.add_to_channel(member, channel)
+            added_to_channel = True
+            await member.dm_channel.send(speech.ADDED_TO_CHANNEL % channel)
+
+    if not added_to_channel:
+        await member.dm_channel.send(speech.ALREADY_IN_CHANNELS % course)
 
 @bot.event
 async def on_member_join(member):
@@ -72,10 +63,18 @@ async def on_member_join(member):
 async def on_message(msg):
     if msg.author == bot.user:
         return
-    if isinstance(msg.channel, discord.DMChannel):  # process DM
+    if isinstance(msg.channel, discord.DMChannel):
+        guild_member = guild.get_member(msg.author.id)
         user = memory.users.get(msg.author.id)
         if user is None:
             logging.info(f"{msg.author} ({msg.author.id}): {msg.content} (UNKNOWN)")
+            if guild_member is None:
+                airlock = discord.utils.get(guild.channels, name='airlock')
+                await msg.author.send(speech.UNKNOWN_USER % airlock_channel.create_invite())
+            else:
+                memory.users[msg.author.id] = memory.User(msg.author.id, msg.author.name)
+                await msg.author.send(speech.RE_VERIFY % msg.author.name)
+                await msg.author.send(speech.EMAIL_REQUEST)
             return
         logging.info(f"{user}: {msg.content}")
         if user.verified:
@@ -91,9 +90,10 @@ async def on_message(msg):
             return
         email_addr = utils.find_email(msg.content)
         if user.code is not None and user.code in msg.content:
-            await msg.author.send(speech.VERIFIED)
             user.verified = True
             logging.info(f"{user} verified")
+            await server.add_to_channel(guild_member, general_channel)
+            await msg.author.send(speech.VERIFIED)
         elif user.code is not None and email_addr is None:
             await msg.author.send(speech.BAD_CODE)
         elif user.code is None and email_addr is None:

@@ -1,13 +1,7 @@
 import logging
 
 import discord
-import leonidas
 
-class CourseChannels:
-    def __init__(self, dept_general, course_channel, section_channel=None):
-        self.dept_general = dept_general
-        self.course_channel = course_channel
-        self.section_channel = section_channel
 
 async def create_channels(guild, course):
     """Creates channels for `course` that don't already exist.
@@ -19,25 +13,36 @@ async def create_channels(guild, course):
     Args:
         guild: the guild (server) to create the channels in
         course: the `leonidas.course.Course` to create channels for
+    Yields:
+        - department general channel
+        - course channel
+        - section channel (maybe)
     """
     secret = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False)
     }
+
     dept_category = discord.utils.get(guild.categories, name=course.dept)
     if dept_category is None:
         dept_category = await guild.create_category(course.dept,
                                                     overwrites=secret)
         logging.info(f"created department category {dept_category}")
-    dept_general = discord.utils.get(dept_category.channels, name='general')
+
+    dept_general_name = f'{course.dept}-general'.lower()
+    dept_general = discord.utils.get(dept_category.channels, name=dept_general_name)
     if dept_general is None:
-        dept_general = await dept_category.create_text_channel('general')
-        logging.info(f"created {dept_category} general channel")
+        dept_general = await dept_category.create_text_channel(dept_general_name)
+        logging.info(f"created channel {dept_general}")
+        yield dept_general
+
     course_channel_name = f"{course.dept}-{course.code}".lower()
     course_channel = discord.utils.get(dept_category.channels, name=course_channel_name)
     if course_channel is None:
         course_channel = await dept_category.create_text_channel(course_channel_name,
                                                                  overwrites=secret)
-        logging.info(f"created course channel {course_channel}")
+        logging.info(f"created channel {course_channel}")
+        yield course_channel
+
     section_channel = None
     if course.section is not None:
         section_channel_name = f"{course.dept}-{course.code}-{course.section}".lower()
@@ -46,12 +51,8 @@ async def create_channels(guild, course):
         if section_channel is None:
             section_channel = await dept_category.create_text_channel(section_channel_name,
                                                                       overwrites=secret)
-            logging.info(f"created section channel {section_channel}")
-
-    return CourseChannels(dept_general,
-                          course_channel,
-                          section_channel=section_channel)
-
+            logging.info(f"created channel {section_channel}")
+            yield section_channel
 
 
 async def in_channel(user, channel):
