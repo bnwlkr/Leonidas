@@ -34,7 +34,7 @@ async def create_channels(guild, course):
         dept_general = await dept_category.create_text_channel(dept_general_name,
                                                                overwrites=secret)
         logging.info(f"created channel {dept_general}")
-        yield dept_general
+    yield dept_general
 
     course_channel_name = f"{course.dept}-{course.code}".lower()
     course_channel = discord.utils.get(dept_category.channels, name=course_channel_name)
@@ -42,7 +42,7 @@ async def create_channels(guild, course):
         course_channel = await dept_category.create_text_channel(course_channel_name,
                                                                  overwrites=secret)
         logging.info(f"created channel {course_channel}")
-        yield course_channel
+    yield course_channel
 
     section_channel = None
     if course.section is not None:
@@ -53,7 +53,7 @@ async def create_channels(guild, course):
             section_channel = await dept_category.create_text_channel(section_channel_name,
                                                                       overwrites=secret)
             logging.info(f"created channel {section_channel}")
-            yield section_channel
+        yield section_channel
 
 
 async def in_channel(user, channel):

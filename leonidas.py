@@ -7,7 +7,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv()
 
-from leonidas import memory, speech, email, utils, course, server
+from leonidas import memory, speech, email, utils, course, server, schedule
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
@@ -79,12 +79,23 @@ async def on_message(msg):
         logging.info(f"{user}: {msg.content}")
         if user.verified:
             found_course = False
-            async for match in utils.find_courses(msg.content):
+            for attachment in msg.attachments:
+                if not attachment.filename.endswith('.ics'):
+                    await msg.author.send(speech.BAD_SCHEDULE)
+                else:
+                    ics_txt = await utils.fetch(attachment.url)
+                    for parsed_course in {c async for c in 
+                                          schedule.get_courses(ics_txt)}:
+                        found_course = True
+                        await handle_course_request(msg.author, parsed_course)
+
+            for match in {m async for m in utils.find_courses(msg.content)}:
                 if isinstance(match, course.Course):
                     found_course = True
                     await handle_course_request(msg.author, match)
                 else:
                     await msg.author.send(speech.BAD_COURSE % match)
+
             if not found_course:
                 await msg.author.send(speech.NO_COURSES)
             return

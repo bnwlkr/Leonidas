@@ -1,6 +1,8 @@
 import re
 import logging
-import random, string
+import random
+import string
+import aiohttp
 
 from leonidas import course
 
@@ -34,3 +36,7 @@ async def find_courses(msg):
                 no_match_resp = f"{no_match_resp} {match_dict['section']}"
             yield no_match_resp
 
+async def fetch(url, params=None):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as response:
+            return await response.text()
