@@ -7,8 +7,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv()
 
-from leonidas import memory, speech, email, utils
-from leonidas.course import Course
+from leonidas import memory, speech, email, utils, course, server
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
@@ -24,40 +23,64 @@ EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
 
 logging.basicConfig(level=logging.INFO)
 
-leonidas = commands.Bot('!')
+bot = commands.Bot('!')
+
+
+@bot.event
+async def on_ready():
+    global guild
+    global general_channel
+    global airlock_channel
+    guild = discord.utils.get(bot.guilds, name=GUILD)
+    assert guild is not None, f"couldn't find guild {GUILD}"
+    general_channel = discord.utils.get(guild.channels, name='ubc-general')
+    assert general_channel is not None, "couldn't find ubc-general channel"
+    airlock_channel = discord.utils.get(guild.channels, name='airlock')
+    assert general_channel is not None, "couldn't find airlock channel"
+    logging.info(f"{bot.user} connected to {guild.name}")
 
 async def handle_course_request(user, course):
-    await user.send(speech.ADDED_TO_CHANNEL % course)
+    logging.info(f"course request for {course}")
+    member = guild.get_member(user.id)
+    added_to_channel = False
+    async for channel in server.create_channels(guild, course):
+        if not (await server.in_channel(member, channel)):
+            await server.add_to_channel(member, channel)
+            added_to_channel = True
+            await member.dm_channel.send(speech.ADDED_TO_CHANNEL % channel)
 
-@leonidas.event
-async def on_ready():
-    guild = discord.utils.get(leonidas.guilds, name=GUILD)
-    if guild is None:
-        raise LookupError(f"Guild '{GUILD}' not found")
-    logging.info(f"{leonidas.user} connected to {guild.name}")
+    if not added_to_channel:
+        await member.dm_channel.send(speech.ALREADY_IN_CHANNELS % course)
 
-
-@leonidas.event
+@bot.event
 async def on_member_join(member):
     memory.users[member.id] = memory.User(member.id, member.name)
     await member.create_dm()
     await member.dm_channel.send(speech.GREETING % member.name)
     await member.dm_channel.send(speech.EMAIL_REQUEST)
 
-@leonidas.event
+@bot.event
 async def on_message(msg):
-    if msg.author == leonidas.user:
+    if msg.author == bot.user:
         return
-    if isinstance(msg.channel, discord.DMChannel):  # process DM
+    if isinstance(msg.channel, discord.DMChannel):
+        guild_member = guild.get_member(msg.author.id)
         user = memory.users.get(msg.author.id)
         if user is None:
-            logging.info(f"{msg.author}: {msg.content} (UNKNOWN)")
+            logging.info(f"{msg.author} ({msg.author.id}): {msg.content} (UNKNOWN)")
+            if guild_member is None:
+                airlock = discord.utils.get(guild.channels, name='airlock')
+                await msg.author.send(speech.UNKNOWN_USER % airlock_channel.create_invite())
+            else:
+                memory.users[msg.author.id] = memory.User(msg.author.id, msg.author.name)
+                await msg.author.send(speech.RE_VERIFY % msg.author.name)
+                await msg.author.send(speech.EMAIL_REQUEST)
             return
         logging.info(f"{user}: {msg.content}")
         if user.verified:
             found_course = False
             async for match in utils.find_courses(msg.content):
-                if isinstance(match, Course):
+                if isinstance(match, course.Course):
                     found_course = True
                     await handle_course_request(msg.author, match)
                 else:
@@ -67,9 +90,10 @@ async def on_message(msg):
             return
         email_addr = utils.find_email(msg.content)
         if user.code is not None and user.code in msg.content:
-            await msg.author.send(speech.VERIFIED)
             user.verified = True
             logging.info(f"{user} verified")
+            await server.add_to_channel(guild_member, general_channel)
+            await msg.author.send(speech.VERIFIED)
         elif user.code is not None and email_addr is None:
             await msg.author.send(speech.BAD_CODE)
         elif user.code is None and email_addr is None:
@@ -87,16 +111,16 @@ async def on_message(msg):
             user.email = email_addr
             await msg.author.send(speech.SENT_EMAIL % email_addr)
     else:
-        await leonidas.process_commands(msg)
+        await bot.process_commands(msg)
 
 # example of a command
-@leonidas.command()
+@bot.command()
 async def example(ctx, arg):
     print(f"{ctx.author}: !example {arg}")
 
 def main():
     with memory.boot('memory.db'):
-        leonidas.run(TOKEN)
+        bot.run(TOKEN)
 
 
 if __name__ == '__main__':

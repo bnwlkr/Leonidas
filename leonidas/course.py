@@ -11,7 +11,7 @@ class Course:
 
     Attributes:
         dept (str): e.g. 'CPSC', 'BIOL'
-        code (int): e.g. 110, 415
+        code (str): e.g. 110, 415
         section (str): e.g. '101', '2W1', 'L11'
     """
     @classmethod
@@ -22,9 +22,12 @@ class Course:
 
 
     def __init__(self, dept, code, section=None):
-        self.dept = dept
-        self.code = code
-        self.section = section
+        self.dept = dept.upper()
+        self.code = code.upper()
+        if section is not None:
+            self.section = section.upper()
+        else:
+            self.section = None
 
 
     async def _validate(self):
