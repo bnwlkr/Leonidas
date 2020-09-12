@@ -18,12 +18,17 @@ BAD_CODE = ("Hmm, I can't see the right access code in your message.\n"
             "If you need me to resend the code, please tell me your UBC email address again.\n" +
             _HAVING_TROUBLE)
 
-BAD_COURSE = ("I don't think '%s' is a valid UBC class this session")
+BAD_COURSE = ("I don't think '%s' is a valid UBC class this session.")
 
-NO_COURSES = ("Hmm, I can't see any valid UBC classes in your message.\n" +
+NO_COURSES = ("I can't see any valid UBC classes in your message.\n" +
               _HAVING_TROUBLE)
 
 ADDED_TO_CHANNEL = ("I added you to the <#%s> channel!")
+
+REMOVED_FROM_CHANNEL = ("I removed you from *%s*.")
+
+INVALID_CHANNEL = ("I don't think *%s* is a valid class channel. Please try again.\n" +
+                   _HAVING_TROUBLE)
 
 ALREADY_IN_CHANNELS = ("Looks like you're already in all the channels related to *%s*.")
 
