@@ -1,4 +1,5 @@
 import re
+import logging
 
 from leonidas import course, utils
 
