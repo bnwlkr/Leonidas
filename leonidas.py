@@ -7,7 +7,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv()
 
-from leonidas import memory, speech, email, utils, course, server, schedule
+from leonidas import memory, speech, email, utils, course, server
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
@@ -31,12 +31,20 @@ async def on_ready():
     global guild
     global general_channel
     global airlock_channel
+    global meta_channel
+
     guild = discord.utils.get(bot.guilds, name=GUILD)
     assert guild is not None, f"couldn't find guild {GUILD}"
+
+    airlock_channel = discord.utils.get(guild.channels, name='airlock')
+    assert airlock_channel is not None, "couldn't find airlock channel"
+
     general_channel = discord.utils.get(guild.channels, name='ubc-general')
     assert general_channel is not None, "couldn't find ubc-general channel"
-    airlock_channel = discord.utils.get(guild.channels, name='airlock')
-    assert general_channel is not None, "couldn't find airlock channel"
+
+    meta_channel = discord.utils.get(guild.channels, name='meta')
+    assert meta_channel is not None, "couldn't find meta channel"
+
     logging.info(f"{bot.user} connected to {guild.name}")
 
 async def handle_course_request(user, course):
@@ -47,7 +55,7 @@ async def handle_course_request(user, course):
         if not (await server.in_channel(member, channel)):
             await server.add_to_channel(member, channel)
             added_to_channel = True
-            await member.dm_channel.send(speech.ADDED_TO_CHANNEL % channel)
+            await member.dm_channel.send(speech.ADDED_TO_CHANNEL % channel.id)
 
     if not added_to_channel:
         await member.dm_channel.send(speech.ALREADY_IN_CHANNELS % course)
@@ -82,15 +90,6 @@ async def on_message(msg):
 
         if user.verified:
             found_course = False
-            for attachment in msg.attachments:
-                if not attachment.filename.endswith('.ics'):
-                    await msg.author.send(speech.BAD_SCHEDULE)
-                else:
-                    ics_txt = await utils.fetch(attachment.url)
-                    for parsed_course in {c async for c in 
-                                          schedule.get_courses(ics_txt)}:
-                        found_course = True
-                        await handle_course_request(msg.author, parsed_course)
 
             for match in {m async for m in utils.find_courses(msg.content)}:
                 if isinstance(match, course.Course):
@@ -108,14 +107,16 @@ async def on_message(msg):
             user.verified = True
             logging.info(f"{user} verified")
             await server.add_to_channel(guild_member, general_channel)
-            await msg.author.send(speech.VERIFIED)
+            await server.add_to_channel(guild_member, meta_channel)
+            await msg.author.send(speech.VERIFIED % (general_channel.id, meta_channel.id))
+            await msg.author.send(speech.COURSE_INSTRUCTIONS)
         elif user.code is not None and email_addr is None:
-            await msg.author.send(speech.BAD_CODE)
+            await msg.author.send(speech.BAD_CODE % airlock_channel.id)
         elif user.code is None and email_addr is None:
-            await msg.author.send(speech.BAD_EMAIL)
+            await msg.author.send(speech.BAD_EMAIL % airlock_channel.id)
         elif email_addr:
             if memory.email_already_verified(email_addr):
-                await msg.author.send(speech.EMAIL_ALREADY_USED)
+                await msg.author.send(speech.EMAIL_ALREADY_USED % airlock_channel.id)
                 logging.info(f"{user}: {email_addr} already used")
                 return
             code = utils.generate_code()
