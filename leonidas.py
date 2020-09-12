@@ -76,21 +76,37 @@ async def on_message(msg):
         guild_member = guild.get_member(msg.author.id)
         user = memory.users.get(msg.author.id)
 
+        if guild_member is None:
+            airlock = discord.utils.get(guild.channels, name='airlock')
+            await msg.author.send(speech.UNKNOWN_USER % airlock_channel.create_invite())
+            return
+
         if user is None:
             logging.info(f"{msg.author} ({msg.author.id}): {msg.content} (UNKNOWN)")
-            if guild_member is None:
-                airlock = discord.utils.get(guild.channels, name='airlock')
-                await msg.author.send(speech.UNKNOWN_USER % airlock_channel.create_invite())
-            else:
-                memory.users[msg.author.id] = memory.User(msg.author.id, msg.author.name)
-                await msg.author.send(speech.RE_VERIFY % msg.author.name)
-                await msg.author.send(speech.EMAIL_REQUEST)
+            memory.users[msg.author.id] = memory.User(msg.author.id, msg.author.name)
+            await msg.author.send(speech.RE_VERIFY % msg.author.name)
+            await msg.author.send(speech.EMAIL_REQUEST)
             return
+
         logging.info(f"{user}: {msg.content}")
 
         if user.verified:
-            found_course = False
+            leave_search = re.search(r'leave ([A-z\d\-]+)', msg.content.lower())
+            if leave_search is not None:
+                channel_name = leave_search.group(1)
+                channel = discord.utils.get(guild.channels, name=channel_name)
+                if channel_name in ['ubc-general', 'meta']:
+                    channel = None
+                if channel is not None:
+                    await server.rm_from_channel(guild_member, channel)
+                    await msg.author.send(speech.REMOVED_FROM_CHANNEL % channel)
+                else:
+                    await msg.author.send(speech.INVALID_CHANNEL %
+                                          (channel_name, airlock_channel.id))
+                return
 
+
+            found_course = False
             for match in {m async for m in utils.find_courses(msg.content)}:
                 if isinstance(match, course.Course):
                     found_course = True
@@ -99,7 +115,7 @@ async def on_message(msg):
                     await msg.author.send(speech.BAD_COURSE % match)
 
             if not found_course:
-                await msg.author.send(speech.NO_COURSES)
+                await msg.author.send(speech.NO_COURSES % airlock_channel.id)
             return
 
         email_addr = utils.find_email(msg.content)

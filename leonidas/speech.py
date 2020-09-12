@@ -25,6 +25,11 @@ NO_COURSES = ("Hmm, I can't see any valid UBC classes in your message.\n" +
 
 ADDED_TO_CHANNEL = ("I added you to the <#%s> channel!")
 
+REMOVED_FROM_CHANNEL = ("I removed you from *%s*.")
+
+INVALID_CHANNEL = ("I don't think *%s* is a valid class channel. Please try again.\n" +
+                   _HAVING_TROUBLE)
+
 ALREADY_IN_CHANNELS = ("Looks like you're already in all the channels related to *%s*.")
 
 VERIFIED = ("Nice! You're verified. I've added you to <#%s> and <#%s>.")
