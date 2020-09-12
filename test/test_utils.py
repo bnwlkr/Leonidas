@@ -1,7 +1,6 @@
 import aiounittest
 
-from leonidas import utils
-from leonidas.course import Course
+from leonidas import utils, course
 
 
 class TestUtils(aiounittest.AsyncTestCase):
@@ -18,13 +17,13 @@ class TestUtils(aiounittest.AsyncTestCase):
 
     async def test_find_courses_found(self):
         msg = "Please add me to CPSC 110"
-        expected = {Course('CPSC', '110')}
+        expected = {course.Course('CPSC', '110')}
         actual = {c async for c in utils.find_courses(msg)}
         self.assertSetEqual(actual, expected)
 
     async def test_find_courses_section(self):
         msg = "Please add me to CPSC 110 101"
-        expected = {Course('CPSC', '110', section='101')}
+        expected = {course.Course('CPSC', '110', section='101')}
         actual = {c async for c in utils.find_courses(msg)}
         self.assertSetEqual(actual, expected)
 

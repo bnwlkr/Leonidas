@@ -1,6 +1,7 @@
-import aiohttp
 import itertools
 from datetime import datetime
+
+from leonidas import utils
 
 class NoSuchCourseException(Exception):
     pass
@@ -20,7 +21,6 @@ class Course:
         await course._validate()
         return course
 
-
     def __init__(self, dept, code, section=None):
         self.dept = dept.upper()
         self.code = code.upper()
@@ -28,7 +28,6 @@ class Course:
             self.section = section.upper()
         else:
             self.section = None
-
 
     async def _validate(self):
         courses_url = 'https://courses.students.ubc.ca/cs/courseschedule?'
@@ -38,12 +37,9 @@ class Course:
             params['section'] = self.section
         else:
             params['tname'] = 'subj-course'
-        async with aiohttp.ClientSession() as session:
-            async with session.get(courses_url, params=params) as response:
-                result = await response.text()
-        if 'no longer offered' in result:
+        page_contents = await utils.fetch(courses_url, params=params)
+        if 'no longer offered' in page_contents:
             raise NoSuchCourseException()
-
 
     def __eq__(self, other):
         if not isinstance(other, Course):
