@@ -27,7 +27,7 @@ ADDED_TO_CHANNEL = ("I added you to the <#%s> channel!")
 
 ALREADY_IN_CHANNELS = ("Looks like you're already in all the channels related to *%s*.")
 
-VERIFIED = ("Nice! You're verified. I've added you to <#%s>.")
+VERIFIED = ("Nice! You're verified. I've added you to <#%s> and <#%s>.")
 
 COURSE_INSTRUCTIONS = ("Let's add you to some courses!\n"
                        "Tell me the courses/sections/labs/tutorials/waitlists that you're in. E.g.:\n\n"

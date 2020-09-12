@@ -108,7 +108,7 @@ async def on_message(msg):
             logging.info(f"{user} verified")
             await server.add_to_channel(guild_member, general_channel)
             await server.add_to_channel(guild_member, meta_channel)
-            await msg.author.send(speech.VERIFIED % general_channel.id)
+            await msg.author.send(speech.VERIFIED % (general_channel.id, meta_channel.id))
             await msg.author.send(speech.COURSE_INSTRUCTIONS)
         elif user.code is not None and email_addr is None:
             await msg.author.send(speech.BAD_CODE % airlock_channel.id)
