@@ -44,7 +44,6 @@ async def create_channels(guild, course):
         logging.info(f"created channel {course_channel}")
     yield course_channel
 
-    section_channel = None
     if course.section is not None:
         section_channel_name = f'{course.dept}-{course.code}-{course.section}'.lower()
         section_channel = discord.utils.get(course_category.channels,
