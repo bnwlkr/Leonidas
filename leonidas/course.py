@@ -12,7 +12,7 @@ class Course:
 
     Attributes:
         dept (str): e.g. 'CPSC', 'BIOL'
-        code (str): e.g. 110, 415
+        code (str): e.g. '110', '415', '448B'
         section (str): e.g. '101', '2W1', 'L11'
     """
     @classmethod
