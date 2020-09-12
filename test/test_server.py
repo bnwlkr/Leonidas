@@ -15,8 +15,13 @@ class TestServer(aiounittest.AsyncTestCase):
         channels = ['cpsc-general', 'cpsc-110', 'cpsc-110-101']
         i = 0
         async for _ in server.create_channels(mock_guild, test_course):
+            if i == 0:
+                mock_guild.create_text_channel.assert_called_once_with(channels[i],
+                                                                       overwrites=mock.ANY)
+                continue
             create_channel_mock = mock_guild.create_category.return_value.create_text_channel
             create_channel_mock.assert_called_with(channels[i], overwrites=mock.ANY)
             i += 1
 
-        mock_guild.create_category.assert_called_once_with('CPSC', overwrites=mock.ANY)
+        mock_guild.create_category.assert_called_once_with('cpsc-110', overwrites=mock.ANY)
+        
