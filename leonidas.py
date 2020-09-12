@@ -52,6 +52,7 @@ async def handle_course_request(user, course):
     if not added_to_channel:
         await member.dm_channel.send(speech.ALREADY_IN_CHANNELS % course)
 
+
 @bot.event
 async def on_member_join(member):
     memory.users[member.id] = memory.User(member.id, member.name)
@@ -66,6 +67,7 @@ async def on_message(msg):
     if isinstance(msg.channel, discord.DMChannel):
         guild_member = guild.get_member(msg.author.id)
         user = memory.users.get(msg.author.id)
+
         if user is None:
             logging.info(f"{msg.author} ({msg.author.id}): {msg.content} (UNKNOWN)")
             if guild_member is None:
@@ -77,6 +79,7 @@ async def on_message(msg):
                 await msg.author.send(speech.EMAIL_REQUEST)
             return
         logging.info(f"{user}: {msg.content}")
+
         if user.verified:
             found_course = False
             for attachment in msg.attachments:
@@ -99,6 +102,7 @@ async def on_message(msg):
             if not found_course:
                 await msg.author.send(speech.NO_COURSES)
             return
+
         email_addr = utils.find_email(msg.content)
         if user.code is not None and user.code in msg.content:
             user.verified = True
