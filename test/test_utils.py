@@ -15,11 +15,24 @@ class TestUtils(aiounittest.AsyncTestCase):
         actual = utils.find_email(msg)
         self.assertIsNone(actual)
 
-    async def test_find_courses_found(self):
+    async def test_find_courses_found_space(self):
         msg = "Please add me to CPSC 110"
         expected = {course.Course('CPSC', '110')}
         actual = {c async for c in utils.find_courses(msg)}
         self.assertSetEqual(actual, expected)
+
+    async def test_find_courses_found_no_space(self):
+        msg = "FISH506G 101"
+        expected = {course.Course('FISH', '506G', '101')}
+        actual = {c async for c in utils.find_courses(msg)}
+        self.assertSetEqual(actual, expected)
+
+    async def test_find_courses_found_no_space_at_all(self):
+        msg = "CPSC415101"
+        expected = {course.Course('CPSC', '415', '101')}
+        actual = {c async for c in utils.find_courses(msg)}
+        self.assertSetEqual(actual, expected)
+
 
     async def test_find_courses_section(self):
         msg = "Please add me to CPSC 110 101"

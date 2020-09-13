@@ -18,9 +18,9 @@ def find_email(msg):
         return None
 
 async def find_courses(msg):
-    regex = (r"\b(?P<dept>[A-z]{3,4}) "
+    regex = (r"\b(?P<dept>[A-z]{4})\s?"
              r"(?P<code>[\dA-z]{3,4})"
-             r"(?: (?P<section>[\dA-z]{3}))?\b")
+             r"(?:\s?(?P<section>[\dA-z]{3}))?\b")
     for match in re.finditer(regex, msg):
         try:
             match_dict = match.groupdict()

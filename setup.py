@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="leonidas",
-    version="0.0.1",
+    version="1.0.0rc2",
     author="bnwlkr",
     description="UBC Discord's Loyal Protector",
     url="https://github.com/bnwlkr/Leonidas",
