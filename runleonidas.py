@@ -86,7 +86,8 @@ async def on_message(msg):
             if msg_search is not None:
                 match_dict = msg_search.groupdict()
                 channel = discord.utils.get(guild.channels, name=match_dict['channel'])
-                await channel.send(match_dict['msg'])
+                sent = await channel.send(match_dict['msg'])
+                await sent.pin()
                 logging.info(f"manually sent message in {channel}")
                 return
 
