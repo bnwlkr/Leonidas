@@ -68,7 +68,9 @@ async def on_member_join(member):
     memory.users[member.id] = memory.User(member.id, member.name)
     await member.create_dm()
     await member.dm_channel.send(speech.GREETING % member.name)
+    await member.dm_channel.send(embed=speech.EMAIL_INST_EMBED)
     await member.dm_channel.send(speech.EMAIL_REQUEST)
+    logging.info(f"new member {member.name}")
 
 @bot.event
 async def on_message(msg):
