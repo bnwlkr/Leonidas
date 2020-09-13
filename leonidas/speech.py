@@ -1,9 +1,11 @@
+import discord
+
 _HAVING_TROUBLE = ("If you're having trouble, please send a message in <#%s>.")
 
 GREETING = ("Greetings **%s**! I am Leonidas, UBC discord's loyal guardian.\n"
             "To start with, I'll verify your UBC email address and then I can add you to the course chats!")
 
-EMAIL_REQUEST = ("Please tell me your UBC email address. It should end with **ubc.ca**")
+EMAIL_REQUEST = ("Please tell me your UBC email address. It should end with **ubc.ca**.")
 
 BAD_EMAIL = ("Hmm, I couldn't see a UBC email address in your message.\n" +
              _HAVING_TROUBLE)
@@ -51,3 +53,9 @@ RE_VERIFY = ("Hi **%s**, I need to verify your account.\n"
              "Apologies if we already did this, I suffer from occasional memory loss.")
                 
 
+EMAIL_INST_EMBED = discord.Embed(
+    title="Getting a UBC email address",
+    url="https://it.ubc.ca/services/email-voice-internet/ubc-student-email-service",
+    description="Follow these steps if you don't already have a UBC email address!",
+    colour=discord.Color.from_rgb(0, 30, 60)
+).set_thumbnail(url="https://teenlife.s3.amazonaws.com/media/uploads/listings/BLqgL7cNrgto.jpg")

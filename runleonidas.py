@@ -68,7 +68,9 @@ async def on_member_join(member):
     memory.users[member.id] = memory.User(member.id, member.name)
     await member.create_dm()
     await member.dm_channel.send(speech.GREETING % member.name)
+    await member.dm_channel.send(embed=speech.EMAIL_INST_EMBED)
     await member.dm_channel.send(speech.EMAIL_REQUEST)
+    logging.info(f"new member {member.name}")
 
 @bot.event
 async def on_message(msg):
@@ -84,7 +86,8 @@ async def on_message(msg):
             if msg_search is not None:
                 match_dict = msg_search.groupdict()
                 channel = discord.utils.get(guild.channels, name=match_dict['channel'])
-                await channel.send(match_dict['msg'])
+                sent = await channel.send(match_dict['msg'])
+                await sent.pin()
                 logging.info(f"manually sent message in {channel}")
                 return
 
