@@ -78,6 +78,16 @@ async def on_message(msg):
         guild_member = guild.get_member(msg.author.id)
         user = memory.users.get(msg.author.id)
 
+        if guild_member == guild.owner:
+            logging.info("message from owner")
+            msg_search = re.search(r'<(?P<channel>[A-z\d\-]+)> (?P<msg>.+)', msg.content)
+            if msg_search is not None:
+                match_dict = msg_search.groupdict()
+                channel = discord.utils.get(guild.channels, name=match_dict['channel'])
+                await channel.send(match_dict['msg'])
+                logging.info(f"manually sent message in {channel}")
+                return
+
         if guild_member is None:
             airlock = discord.utils.get(guild.channels, name='airlock')
             await msg.author.send(speech.UNKNOWN_USER % airlock_channel.create_invite())

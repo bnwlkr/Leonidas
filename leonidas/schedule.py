@@ -36,7 +36,7 @@ async def get_courses(ics_txt):
         A list of course.Course objects found
     """
     for event_summary in re.finditer(r'SUMMARY:(.+)', ics_txt):
-        course_txt = event_summary.group()
+        course_txt = event_summary.group(1)
         match = [c async for c in utils.find_courses(course_txt)][0]
         if isinstance(match, course.Course):
             yield match
