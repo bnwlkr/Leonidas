@@ -100,7 +100,7 @@ async def on_message(msg):
             if 'help' in msg.content.lower():
                 logging.info("verified asking for help")
                 await msg.author.send(speech.COURSE_INSTRUCTIONS_1)
-                with open('img/ics_download.png', 'rb') as ics_download:
+                with open('img/ics-download.png', 'rb') as ics_download:
                     await msg.author.send(file=discord.File(ics_download))
                 await msg.author.send(speech.COURSE_INSTRUCTIONS_2)   
                 return
@@ -160,7 +160,7 @@ async def on_message(msg):
             await server.add_to_channel(guild_member, meta_channel)
             await msg.author.send(speech.VERIFIED % (general_channel.id, meta_channel.id))
             await msg.author.send(speech.COURSE_INSTRUCTIONS_1)
-            with open('img/ics_download.png', 'rb') as ics_download:
+            with open('img/ics-download.png', 'rb') as ics_download:
                 await msg.author.send(file=discord.File(ics_download))
             await asyncio.sleep(5)
             await msg.author.send(speech.COURSE_INSTRUCTIONS_2)
