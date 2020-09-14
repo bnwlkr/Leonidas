@@ -19,6 +19,7 @@ class TestSchedule(aiounittest.AsyncTestCase):
                     course.Course('BIOL', '112', '103'),
                     course.Course('BIOL', '121', '221'),
                     course.Course('BIOL', '200', '201'),
+                    course.Course('BIOL', '200', 'T63'),
                     course.Course('CPSC', '425', '201'),
                     course.Course('CPSC', '445', '201'),
                     course.Course('CPSC', '416', '2W1')}
