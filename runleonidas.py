@@ -3,13 +3,14 @@
 import os
 import re
 import logging
+import asyncio
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv()
 
-from leonidas import memory, speech, email, utils, course, server
+from leonidas import memory, speech, email, utils, course, server, schedule
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
@@ -21,7 +22,10 @@ EMAIL_SERVER_PORT = os.getenv('EMAIL_SERVER_PORT')
 assert TOKEN and GUILD and EMAIL_ACCOUNT and \
        EMAIL_PASSWD and EMAIL_SERVER_ADDR and EMAIL_SERVER_PORT
 
+SCHEDULE_YEAR = os.getenv('SCHEDULE_YEAR', default=None)
+
 EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
+SCHEDULE_YEAR = int(SCHEDULE_YEAR)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -49,6 +53,7 @@ async def on_ready():
 
     logging.info(f"{bot.user} connected to {guild.name}")
 
+
 async def handle_course_request(user, course):
     logging.info(f"course request for {course}")
     member = guild.get_member(user.id)
@@ -67,10 +72,11 @@ async def handle_course_request(user, course):
 async def on_member_join(member):
     memory.users[member.id] = memory.User(member.id, member.name)
     await member.create_dm()
-    await member.dm_channel.send(speech.GREETING % member.name)
+    await member.dm_channel.send(speech.GREETING % (member.name, bot.user.id))
     await member.dm_channel.send(embed=speech.EMAIL_INST_EMBED)
     await member.dm_channel.send(speech.EMAIL_REQUEST)
     logging.info(f"new member {member.name}")
+
 
 @bot.event
 async def on_message(msg):
@@ -106,6 +112,7 @@ async def on_message(msg):
         logging.info(f"{user}: {msg.content}")
 
         if user.verified:
+
             leave_search = re.search(r'leave ([A-z\d\-]+)', msg.content.lower())
             if leave_search is not None:
                 channel_name = leave_search.group(1)
@@ -120,14 +127,28 @@ async def on_message(msg):
                                           (channel_name, airlock_channel.id))
                 return
 
-
             found_course = False
-            for match in {m async for m in utils.find_courses(msg.content)}:
-                if isinstance(match, course.Course):
+
+            for attachment in msg.attachments:
+                if not attachment.filename.endswith('.ics'):
+                    logging.info("non-ics file uploaded")
+                    await msg.author.send(speech.BAD_SCHEDULE % airlock_channel.id)
+                    return
+                logging.info("course request by ics")
+                ics_txt = await utils.fetch(attachment.url)
+                ics_courses = {c async for c in 
+                               schedule.find_courses(ics_txt, only_year=SCHEDULE_YEAR)}
+                for ics_course in ics_courses:
                     found_course = True
-                    await handle_course_request(msg.author, match)
+                    await handle_course_request(msg.author, ics_course)
+
+            msg_matches = {m async for m in utils.find_courses(msg.content)}
+            for msg_match in msg_matches:
+                if isinstance(msg_match, course.Course):
+                    found_course = True
+                    await handle_course_request(msg.author, msg_match)
                 else:
-                    await msg.author.send(speech.BAD_COURSE % match)
+                    await msg.author.send(speech.BAD_COURSE % msg_match)
 
             if not found_course:
                 await msg.author.send(speech.NO_COURSES % airlock_channel.id)
@@ -140,7 +161,11 @@ async def on_message(msg):
             await server.add_to_channel(guild_member, general_channel)
             await server.add_to_channel(guild_member, meta_channel)
             await msg.author.send(speech.VERIFIED % (general_channel.id, meta_channel.id))
-            await msg.author.send(speech.COURSE_INSTRUCTIONS)
+            await msg.author.send(speech.COURSE_INSTRUCTIONS_1)
+            with open('img/ics_download.png', 'rb') as ics_download:
+                await msg.author.send(file=discord.File(ics_download))
+            await asyncio.sleep(5)
+            await msg.author.send(speech.COURSE_INSTRUCTIONS_2)
         elif user.code is not None and email_addr is None:
             await msg.author.send(speech.BAD_CODE % airlock_channel.id)
         elif user.code is None and email_addr is None:
@@ -160,10 +185,6 @@ async def on_message(msg):
     else:
         await bot.process_commands(msg)
 
-# example of a command
-@bot.command()
-async def example(ctx, arg):
-    print(f"{ctx.author}: !example {arg}")
 
 def main():
     with memory.boot('memory.db'):
