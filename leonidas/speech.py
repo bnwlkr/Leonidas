@@ -2,7 +2,7 @@ import discord
 
 _HAVING_TROUBLE = ("If you're having trouble, please send a message in <#%s>.")
 
-GREETING = ("Greetings **%s**! I am Leonidas, UBC discord's loyal guardian.\n"
+GREETING = ("Greetings **%s**! I am <@%s>, UBC Course Chat's loyal guardian.\n"
             "To start with, I'll verify your UBC email address and then I can add you to the course chats!")
 
 EMAIL_REQUEST = ("Please tell me your UBC email address. It should end with **ubc.ca**.")
@@ -39,17 +39,21 @@ ALREADY_IN_CHANNELS = ("Looks like you're already in all the channels related to
 
 VERIFIED = ("Nice! You're verified. I've added you to <#%s> and <#%s>.")
 
-COURSE_INSTRUCTIONS = ("Let's add you to some courses!\n"
-                       "Tell me the courses/sections/labs/tutorials/waitlists that you're in. E.g.:\n\n"
-                       "> *CPSC 110*, *BIOL 112 T02*, *ASTR 101 10W*\n\n"
-                       "If you want to leave a channel at anytime, "
-                       "you can send a message to me like `LEAVE <channel-name>` (e.g. `LEAVE cpsc-110-101`)")
+COURSE_INSTRUCTIONS_1 = ("Let's add you to some course chats!\n"
+                         "The easiest way is to download your course schedule from the timetable page "
+                         "on the SSC and drag/drop that file into the chat here.\n"
+                         "I can read your schedule and automatically add you to chats for your courses, sections, labs, etc.")
+
+COURSE_INSTRUCTIONS_2 = ("Alternatively, you can tell me which classes you want to be added to. E.g.:\n\n"
+                         "> *CPSC 110 101*, *BIOL 112 T02*, *ASTR 101 10W*\n\n"
+                         "If you want to leave a channel at anytime, "
+                         "you can send me a message like `LEAVE cpsc-110-101`.")
 
 
 
 ALREADY_VERIFIED = ("You're already verified")
 
-UNKNOWN_USER = ("Hmm, I can't remember you joining the UBC discord. "
+UNKNOWN_USER = ("Hmm, I can't remember you joining the server. "
                 "Here's an invite link! %s")
 
 RE_VERIFY = ("Hi **%s**, I need to verify your account.\n"

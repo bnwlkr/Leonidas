@@ -3,6 +3,7 @@
 import os
 import re
 import logging
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -51,9 +52,6 @@ async def on_ready():
     assert meta_channel is not None, "couldn't find meta channel"
 
     logging.info(f"{bot.user} connected to {guild.name}")
-    for channel in guild.channels:
-        if channel not in [general_channel, meta_channel, airlock_channel]:
-            await channel.delete()
 
 
 async def handle_course_request(user, course):
@@ -74,7 +72,7 @@ async def handle_course_request(user, course):
 async def on_member_join(member):
     memory.users[member.id] = memory.User(member.id, member.name)
     await member.create_dm()
-    await member.dm_channel.send(speech.GREETING % member.name)
+    await member.dm_channel.send(speech.GREETING % (member.name, bot.user.id))
     await member.dm_channel.send(embed=speech.EMAIL_INST_EMBED)
     await member.dm_channel.send(speech.EMAIL_REQUEST)
     logging.info(f"new member {member.name}")
@@ -134,8 +132,9 @@ async def on_message(msg):
             for attachment in msg.attachments:
                 if not attachment.filename.endswith('.ics'):
                     logging.info("non-ics file uploaded")
-                    await msg.author.send(speech.BAD_SCHEDULE)
+                    await msg.author.send(speech.BAD_SCHEDULE % airlock_channel.id)
                     return
+                logging.info("course request by ics")
                 ics_txt = await utils.fetch(attachment.url)
                 ics_courses = {c async for c in 
                                schedule.find_courses(ics_txt, only_year=SCHEDULE_YEAR)}
@@ -162,7 +161,11 @@ async def on_message(msg):
             await server.add_to_channel(guild_member, general_channel)
             await server.add_to_channel(guild_member, meta_channel)
             await msg.author.send(speech.VERIFIED % (general_channel.id, meta_channel.id))
-            await msg.author.send(speech.COURSE_INSTRUCTIONS)
+            await msg.author.send(speech.COURSE_INSTRUCTIONS_1)
+            with open('img/ics_download.png', 'rb') as ics_download:
+                await msg.author.send(file=discord.File(ics_download))
+            await asyncio.sleep(5)
+            await msg.author.send(speech.COURSE_INSTRUCTIONS_2)
         elif user.code is not None and email_addr is None:
             await msg.author.send(speech.BAD_CODE % airlock_channel.id)
         elif user.code is None and email_addr is None:
