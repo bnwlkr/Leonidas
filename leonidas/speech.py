@@ -22,6 +22,9 @@ BAD_CODE = ("Hmm, I can't see the right access code in your message.\n"
 
 BAD_COURSE = ("I don't think '%s' is a valid UBC class this session.")
 
+BAD_SCHEDULE = ("Hmm, that doesn't look like the right file format to me.\n"
+                + _HAVING_TROUBLE)
+
 NO_COURSES = ("I can't see any valid UBC classes in your message.\n" +
               _HAVING_TROUBLE)
 

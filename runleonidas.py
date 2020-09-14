@@ -9,7 +9,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv()
 
-from leonidas import memory, speech, email, utils, course, server
+from leonidas import memory, speech, email, utils, course, server, schedule
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
@@ -21,7 +21,10 @@ EMAIL_SERVER_PORT = os.getenv('EMAIL_SERVER_PORT')
 assert TOKEN and GUILD and EMAIL_ACCOUNT and \
        EMAIL_PASSWD and EMAIL_SERVER_ADDR and EMAIL_SERVER_PORT
 
+SCHEDULE_YEAR = os.getenv('SCHEDULE_YEAR', default=None)
+
 EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
+SCHEDULE_YEAR = int(SCHEDULE_YEAR)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -48,6 +51,10 @@ async def on_ready():
     assert meta_channel is not None, "couldn't find meta channel"
 
     logging.info(f"{bot.user} connected to {guild.name}")
+    for channel in guild.channels:
+        if channel not in [general_channel, meta_channel, airlock_channel]:
+            await channel.delete()
+
 
 async def handle_course_request(user, course):
     logging.info(f"course request for {course}")
@@ -71,6 +78,7 @@ async def on_member_join(member):
     await member.dm_channel.send(embed=speech.EMAIL_INST_EMBED)
     await member.dm_channel.send(speech.EMAIL_REQUEST)
     logging.info(f"new member {member.name}")
+
 
 @bot.event
 async def on_message(msg):
@@ -106,6 +114,7 @@ async def on_message(msg):
         logging.info(f"{user}: {msg.content}")
 
         if user.verified:
+
             leave_search = re.search(r'leave ([A-z\d\-]+)', msg.content.lower())
             if leave_search is not None:
                 channel_name = leave_search.group(1)
@@ -120,14 +129,27 @@ async def on_message(msg):
                                           (channel_name, airlock_channel.id))
                 return
 
-
             found_course = False
-            for match in {m async for m in utils.find_courses(msg.content)}:
-                if isinstance(match, course.Course):
+
+            for attachment in msg.attachments:
+                if not attachment.filename.endswith('.ics'):
+                    logging.info("non-ics file uploaded")
+                    await msg.author.send(speech.BAD_SCHEDULE)
+                    return
+                ics_txt = await utils.fetch(attachment.url)
+                ics_courses = {c async for c in 
+                               schedule.find_courses(ics_txt, only_year=SCHEDULE_YEAR)}
+                for ics_course in ics_courses:
                     found_course = True
-                    await handle_course_request(msg.author, match)
+                    await handle_course_request(msg.author, ics_course)
+
+            msg_matches = {m async for m in utils.find_courses(msg.content)}
+            for msg_match in msg_matches:
+                if isinstance(msg_match, course.Course):
+                    found_course = True
+                    await handle_course_request(msg.author, msg_match)
                 else:
-                    await msg.author.send(speech.BAD_COURSE % match)
+                    await msg.author.send(speech.BAD_COURSE % msg_match)
 
             if not found_course:
                 await msg.author.send(speech.NO_COURSES % airlock_channel.id)
@@ -160,10 +182,6 @@ async def on_message(msg):
     else:
         await bot.process_commands(msg)
 
-# example of a command
-@bot.command()
-async def example(ctx, arg):
-    print(f"{ctx.author}: !example {arg}")
 
 def main():
     with memory.boot('memory.db'):
