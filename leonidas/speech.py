@@ -1,11 +1,12 @@
 import discord
 
-_HAVING_TROUBLE = ("If you're having trouble, please send a message in <#%s>.")
+_HAVING_TROUBLE = ("Say `help` to me at any time and I'll give you some instructions.\n"
+                   "If you need help from a human, please post in <#%s>.")
 
-GREETING = ("Greetings **%s**! I am <@%s>, UBC Course Chat's loyal guardian.\n"
-            "To start with, I'll verify your UBC email address and then I can add you to the course chats!")
+GREETING = ("Greetings **%s**! I am <@%s>, UBC Course Chat's loyal guardian.\n")
 
-EMAIL_REQUEST = ("Please tell me your UBC email address. It should end with **ubc.ca**.")
+EMAIL_REQUEST = ("I'll verify your UBC email address and then I can add you to the course chats!\n"
+                 "Please tell me your UBC email address. It should end with **ubc.ca**.")
 
 BAD_EMAIL = ("Hmm, I couldn't see a UBC email address in your message.\n" +
              _HAVING_TROUBLE)
@@ -44,12 +45,10 @@ COURSE_INSTRUCTIONS_1 = ("Let's add you to some course chats!\n"
                          "on the SSC and drag/drop that file into the chat here.\n"
                          "I can read your schedule and automatically add you to chats for your courses, sections, labs, etc.")
 
-COURSE_INSTRUCTIONS_2 = ("Alternatively, you can tell me which classes you want to be added to. E.g.:\n\n"
-                         "> *CPSC 110 101*, *BIOL 112 T02*, *ASTR 101 10W*\n\n"
+COURSE_INSTRUCTIONS_2 = ("Alternatively, you can tell me which classes you want to be added to. E.g.:\n"
+                         "> *CPSC 110 101*, *BIOL 112 T02*, *ASTR 101 10W*\n"
                          "If you want to leave a channel at anytime, "
-                         "you can send me a message like `LEAVE cpsc-110-101`.")
-
-
+                         "you can send me a message like `leave cpsc-110-101`.")
 
 ALREADY_VERIFIED = ("You're already verified")
 

@@ -1,3 +1,4 @@
+import mock
 import aiounittest
 
 from leonidas import utils, course
@@ -15,32 +16,44 @@ class TestUtils(aiounittest.AsyncTestCase):
         actual = utils.find_email(msg)
         self.assertIsNone(actual)
 
-    async def test_find_courses_found_space(self):
+    @mock.patch('leonidas.course.Course._validate')
+    async def test_find_courses_found_space(self, _validate_mock):
         msg = "Please add me to CPSC 110"
         expected = {course.Course('CPSC', '110')}
         actual = {c async for c in utils.find_courses(msg)}
         self.assertSetEqual(actual, expected)
 
-    async def test_find_courses_found_no_space(self):
+    @mock.patch('leonidas.course.Course._validate')
+    async def test_find_courses_found_no_space(self, _validate_mock):
         msg = "FISH506G 101"
         expected = {course.Course('FISH', '506G', '101')}
         actual = {c async for c in utils.find_courses(msg)}
         self.assertSetEqual(actual, expected)
 
-    async def test_find_courses_found_no_space_at_all(self):
+    @mock.patch('leonidas.course.Course._validate')
+    async def test_find_courses_found_no_space_at_all(self, _validate_mock):
         msg = "CPSC415101"
         expected = {course.Course('CPSC', '415', '101')}
         actual = {c async for c in utils.find_courses(msg)}
         self.assertSetEqual(actual, expected)
 
 
-    async def test_find_courses_section(self):
+    @mock.patch('leonidas.course.Course._validate')
+    async def test_find_courses_section(self, _validate_mock):
         msg = "Please add me to CPSC 110 101"
         expected = {course.Course('CPSC', '110', section='101')}
         actual = {c async for c in utils.find_courses(msg)}
         self.assertSetEqual(actual, expected)
 
-    async def test_find_courses_empty(self):
+    @mock.patch('leonidas.course.Course._validate')
+    async def test_find_courses_section(self, _validate_mock):
+        msg = "AFST 351A-001"
+        expected = {course.Course('AFST', '351A', section='001')}
+        actual = {c async for c in utils.find_courses(msg)}
+        self.assertSetEqual(actual, expected)
+
+    @mock.patch('leonidas.course.Course._validate')
+    async def test_find_courses_empty(self, _validate_mock):
         msg = "I hate squirrels"
         actual = {c async for c in utils.find_courses(msg)}
         self.assertSetEqual(actual, set())

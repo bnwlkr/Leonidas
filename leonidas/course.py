@@ -11,18 +11,18 @@ class Course:
     """ Represents a university course
 
     Attributes:
-        dept (str): e.g. 'CPSC', 'BIOL'
+        subj (str): e.g. 'CPSC', 'BIOL'
         code (str): e.g. '110', '415', '448B'
         section (str): e.g. '101', '2W1', 'L11'
     """
     @classmethod
-    async def create(cls, dept, code, section=None):
-        course = Course(dept, code, section)
+    async def create(cls, subj, code, section=None):
+        course = Course(subj, code, section)
         await course._validate()
         return course
 
-    def __init__(self, dept, code, section=None):
-        self.dept = dept.upper()
+    def __init__(self, subj, code, section=None):
+        self.subj = subj.upper()
         self.code = code.upper()
         if section is not None:
             self.section = section.upper()
@@ -31,7 +31,7 @@ class Course:
 
     async def _validate(self):
         courses_url = 'https://courses.students.ubc.ca/cs/courseschedule?'
-        params = {'pname': 'subjarea', 'dept': self.dept, 'course': self.code}
+        params = {'pname': 'subjarea', 'dept': self.subj, 'course': self.code}
         if self.section:
             params['tname'] = 'subj-section'
             params['section'] = self.section
@@ -44,15 +44,17 @@ class Course:
     def __eq__(self, other):
         if not isinstance(other, Course):
             return False
-        return self.dept == other.dept and \
-               self.code == other.code
+        return self.subj == other.subj and \
+               self.code == other.code and \
+               self.section == other.section
 
     def __hash__(self):
-        return hash((self.dept,
-                     self.code))
+        return hash((self.subj,
+                     self.code,
+                     self.section))
 
     def  __repr__(self):
-        result = f"{self.dept} {self.code}"
+        result = f"{self.subj} {self.code}"
         if self.section is not None:
             result = f"{result} {self.section}"
         return result
