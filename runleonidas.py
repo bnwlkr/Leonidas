@@ -1,15 +1,34 @@
 #!/usr/bin/env python
 
+import os
 import re
 import logging
 import asyncio
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import discord
 from discord.ext import commands
 
-import config
 from leonidas import memory, speech, email, utils, course, server, schedule
 
+TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD = os.getenv('DISCORD_GUILD')
+EMAIL_ACCOUNT = os.getenv('EMAIL_ACCOUNT')
+EMAIL_PASSWD = os.getenv('EMAIL_PASSWD')
+EMAIL_SERVER_ADDR = os.getenv('EMAIL_SERVER_ADDR')
+EMAIL_SERVER_PORT = os.getenv('EMAIL_SERVER_PORT')
+
+assert TOKEN and GUILD and EMAIL_ACCOUNT and \
+EMAIL_PASSWD and EMAIL_SERVER_ADDR and EMAIL_SERVER_PORT
+
+SCHEDULE_YEAR = os.getenv('SCHEDULE_YEAR', default=None)
+
+EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
+SCHEDULE_YEAR = int(SCHEDULE_YEAR)
+
+logging.basicConfig(level=logging.INFO)
 
 bot = commands.Bot('!')
 
@@ -21,8 +40,8 @@ async def on_ready():
     global meta_channel
     global subjs_category
 
-    guild = discord.utils.get(bot.guilds, name=config.GUILD)
-    assert guild is not None, f"couldn't find guild {config.GUILD}"
+    guild = discord.utils.get(bot.guilds, name=GUILD)
+    assert guild is not None, f"couldn't find guild {GUILD}"
 
     help_channel = discord.utils.get(guild.channels, name='help')
     assert help_channel is not None, "couldn't find help channel"
@@ -129,7 +148,7 @@ async def on_message(msg):
                 logging.info("course request by ics")
                 ics_txt = await utils.fetch(attachment.url)
                 ics_courses = {c async for c in 
-                               schedule.find_courses(ics_txt, only_year=config.SCHEDULE_YEAR)}
+                               schedule.find_courses(ics_txt, only_year=SCHEDULE_YEAR)}
                 for ics_course in ics_courses:
                     found_course = True
                     await handle_course_request(msg.author, ics_course)
@@ -174,8 +193,8 @@ async def on_message(msg):
                 logging.info(f"{user}: {email_addr} already used")
                 return
             code = utils.generate_code()
-            email_cfg = email.EmailConfig(config.EMAIL_ACCOUNT, config.EMAIL_PASSWD,
-                                          config.EMAIL_SERVER_ADDR, config.EMAIL_SERVER_PORT)
+            email_cfg = email.EmailConfig(EMAIL_ACCOUNT, EMAIL_PASSWD,
+                                          EMAIL_SERVER_ADDR, EMAIL_SERVER_PORT)
             email.send_code(email_cfg, email_addr, code)
             user.code = code
             user.email = email_addr
@@ -186,7 +205,7 @@ async def on_message(msg):
 
 def main():
     with memory.boot('memory.db'):
-        bot.run(config.TOKEN)
+        bot.run(TOKEN)
 
 
 if __name__ == '__main__':
