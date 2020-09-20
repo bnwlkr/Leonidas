@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/bnwlkr/Leonidas/ven2/bin/python3.8
 
 import os
 import re
@@ -11,7 +11,7 @@ load_dotenv()
 import discord
 from discord.ext import commands
 
-from leonidas import memory, speech, email, utils, course, server, schedule
+from leonidas import memory, speech, email, utils, course, server
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
@@ -23,10 +23,7 @@ EMAIL_SERVER_PORT = os.getenv('EMAIL_SERVER_PORT')
 assert TOKEN and GUILD and EMAIL_ACCOUNT and \
 EMAIL_PASSWD and EMAIL_SERVER_ADDR and EMAIL_SERVER_PORT
 
-SCHEDULE_YEAR = os.getenv('SCHEDULE_YEAR', default=None)
-
 EMAIL_SERVER_PORT = int(EMAIL_SERVER_PORT)
-SCHEDULE_YEAR = int(SCHEDULE_YEAR)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -37,8 +34,6 @@ async def on_ready():
     global guild
     global general_channel
     global help_channel
-    global meta_channel
-    global subjs_category
 
     guild = discord.utils.get(bot.guilds, name=GUILD)
     assert guild is not None, f"couldn't find guild {GUILD}"
@@ -46,14 +41,8 @@ async def on_ready():
     help_channel = discord.utils.get(guild.channels, name='help')
     assert help_channel is not None, "couldn't find help channel"
 
-    general_channel = discord.utils.get(guild.channels, name='ubc')
-    assert general_channel is not None, "couldn't find ubc channel"
-
-    meta_channel = discord.utils.get(guild.channels, name='meta')
-    assert meta_channel is not None, "couldn't find meta channel"
-
-    subjs_category = discord.utils.get(guild.categories, name='SUBJECTS')
-    assert subjs_category is not None, "couldn't find subjects category"
+    general_channel = discord.utils.get(guild.channels, name='general')
+    assert general_channel is not None, "couldn't find general channel"
 
     logging.info(f"{bot.user} connected to {guild.name}")
 
@@ -62,11 +51,11 @@ async def handle_course_request(user, course):
     logging.info(f"course request for {course}")
     member = guild.get_member(user.id)
     added_to_channel = False
-    async for channel in server.create_channels(guild, subjs_category, course):
-        if not (await server.in_channel(member, channel)):
-            await server.add_to_channel(member, channel)
-            added_to_channel = True
-            await member.dm_channel.send(speech.ADDED_TO_CHANNEL % channel.id)
+    channel = await server.create_channels(guild, course)
+    if not (await server.in_channel(member, channel)):
+        await server.add_to_channel(member, channel)
+        added_to_channel = True
+        await member.dm_channel.send(speech.ADDED_TO_CHANNEL % channel.id)
 
     if not added_to_channel:
         await member.dm_channel.send(speech.ALREADY_IN_CHANNELS % course)
@@ -91,13 +80,12 @@ async def on_message(msg):
         user = memory.users.get(msg.author.id)
 
         if guild_member == guild.owner:
-            logging.info("message from owner")
+            logging.info("message from admin")
             msg_search = re.search(r'<(?P<channel>[A-z\d\-]+)> (?P<msg>.+)', msg.content)
             if msg_search is not None:
                 match_dict = msg_search.groupdict()
                 channel = discord.utils.get(guild.channels, name=match_dict['channel'])
-                sent = await channel.send(match_dict['msg'])
-                await sent.pin()
+                await channel.send(match_dict['msg'])
                 logging.info(f"manually sent message in {channel}")
                 return
 
@@ -115,20 +103,18 @@ async def on_message(msg):
         logging.info(f"{user}: {msg.content}")
 
         if user.verified:
-            
+
             if 'help' in msg.content.lower():
                 logging.info("verified asking for help")
                 await msg.author.send(speech.COURSE_INSTRUCTIONS_1)
-                with open('img/ics-download.png', 'rb') as ics_download:
-                    await msg.author.send(file=discord.File(ics_download))
-                await msg.author.send(speech.COURSE_INSTRUCTIONS_2)   
+                await msg.author.send(speech.COURSE_INSTRUCTIONS_2)
                 return
 
             leave_search = re.search(r'leave ([A-z\d\-]+)', msg.content.lower())
             if leave_search is not None:
                 channel_name = leave_search.group(1)
                 channel = discord.utils.get(guild.channels, name=channel_name)
-                if channel_name in ['ubc', 'meta', 'help']:
+                if channel_name in ['general', 'help']:
                     channel = None
                 if channel is not None:
                     await server.rm_from_channel(guild_member, channel)
@@ -139,20 +125,6 @@ async def on_message(msg):
                 return
 
             found_course = False
-
-            for attachment in msg.attachments:
-                if not attachment.filename.endswith('.ics'):
-                    logging.info("non-ics file uploaded")
-                    await msg.author.send(speech.BAD_SCHEDULE % help_channel.id)
-                    return
-                logging.info("course request by ics")
-                ics_txt = await utils.fetch(attachment.url)
-                ics_courses = {c async for c in 
-                               schedule.find_courses(ics_txt, only_year=SCHEDULE_YEAR)}
-                for ics_course in ics_courses:
-                    found_course = True
-                    await handle_course_request(msg.author, ics_course)
-
             msg_matches = {m async for m in utils.find_courses(msg.content)}
             for msg_match in msg_matches:
                 if isinstance(msg_match, course.Course):
@@ -176,12 +148,8 @@ async def on_message(msg):
             user.verified = True
             logging.info(f"{user} verified")
             await server.add_to_channel(guild_member, general_channel)
-            await server.add_to_channel(guild_member, meta_channel)
-            await msg.author.send(speech.VERIFIED % (general_channel.id, meta_channel.id))
+            await msg.author.send(speech.VERIFIED % general_channel.id)
             await msg.author.send(speech.COURSE_INSTRUCTIONS_1)
-            with open('img/ics-download.png', 'rb') as ics_download:
-                await msg.author.send(file=discord.File(ics_download))
-            await asyncio.sleep(5)
             await msg.author.send(speech.COURSE_INSTRUCTIONS_2)
         elif user.code is not None and email_addr is None:
             await msg.author.send(speech.BAD_CODE % help_channel.id)
@@ -209,4 +177,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main() 
+    main()
