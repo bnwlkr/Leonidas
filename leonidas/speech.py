@@ -23,9 +23,6 @@ BAD_CODE = ("Hmm, I can't see the right access code in your message.\n"
 
 BAD_COURSE = ("I don't think '%s' is a valid UBC class this session.")
 
-BAD_SCHEDULE = ("Hmm, that doesn't look like the right file format to me.\n"
-                + _HAVING_TROUBLE)
-
 NO_COURSES = ("I can't see any valid UBC classes in your message.\n" +
               _HAVING_TROUBLE)
 
@@ -38,17 +35,14 @@ INVALID_CHANNEL = ("I don't think *%s* is a valid class channel. Please try agai
 
 ALREADY_IN_CHANNELS = ("Looks like you're already in all the channels related to *%s*.")
 
-VERIFIED = ("Nice! You're verified. I've added you to <#%s> and <#%s>.")
+VERIFIED = ("Nice! You're verified. I added you to <#%s>.")
 
-COURSE_INSTRUCTIONS_1 = ("Let's add you to some course chats!\n"
-                         "The easiest way is to download your course schedule from the timetable page "
-                         "on the SSC and drag/drop that file into the chat here.\n"
-                         "I can read your schedule and automatically add you to chats for your courses, sections, labs, etc.")
+COURSE_INSTRUCTIONS_1 = ("Let's add you to some course chats!")
 
-COURSE_INSTRUCTIONS_2 = ("Alternatively, you can tell me which classes you want to be added to. E.g.:\n"
-                         "> *CPSC 110 101*, *BIOL 112 T02*, *ASTR 101 10W*\n"
+COURSE_INSTRUCTIONS_2 = ("Just tell me the courses you want to be added to, e.g.:\n"
+                         "> *CPSC 110*, *BIOL 112*, *ASTR 101*\n"
                          "If you want to leave a channel at anytime, "
-                         "you can send me a message like `leave cpsc-110-101`.")
+                         "you can send me a message like `leave cpsc-110`.")
 
 ALREADY_VERIFIED = ("You're already verified")
 
@@ -57,7 +51,7 @@ UNKNOWN_USER = ("Hmm, I can't remember you joining the server. "
 
 RE_VERIFY = ("Hi **%s**, I need to verify your account.\n"
              "Apologies if we already did this, I suffer from occasional memory loss.")
-                
+
 
 EMAIL_INST_EMBED = discord.Embed(
     title="Getting a UBC email address",
