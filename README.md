@@ -1,7 +1,7 @@
-# Leonidas
 <p align="center">
   <img src="img/leonidas-hat.jpg" height="200">
 </p>
+<h1 align="center">Leonidas</h1>
 <p align="center">
   <a href="https://discord.gg/Q5RcfhT">
     <img src="https://discordapp.com/api/guilds/750918549882798130/widget.png?style=shield" alt="Discord Server">
